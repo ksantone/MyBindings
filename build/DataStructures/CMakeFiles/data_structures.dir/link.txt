@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libdata_structures.a CMakeFiles/data_structures.dir/AminoAcids.cpp.o CMakeFiles/data_structures.dir/FragmentWeightMatrix.cpp.o CMakeFiles/data_structures.dir/Peak.cpp.o CMakeFiles/data_structures.dir/SpectrumGraph.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libdata_structures.a
