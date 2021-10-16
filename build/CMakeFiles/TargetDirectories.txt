@@ -1,0 +1,8 @@
+/Users/kassimsantone/Desktop/C++ Bindings/build/CMakeFiles/rebuild_cache.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/CMakeFiles/edit_cache.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/CMakeFiles/denovo_sequencing.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/extern/pybind11/CMakeFiles/rebuild_cache.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/extern/pybind11/CMakeFiles/edit_cache.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/DataStructures/CMakeFiles/rebuild_cache.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/DataStructures/CMakeFiles/edit_cache.dir
+/Users/kassimsantone/Desktop/C++ Bindings/build/DataStructures/CMakeFiles/data_structures.dir
