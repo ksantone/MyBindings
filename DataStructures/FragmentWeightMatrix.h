@@ -21,7 +21,7 @@ public:
 	std::vector<int> available_indices;
 	std::vector<double> fragmentWeightMatrix;
 	void construct_triangle(int);
-	void compute_row(int, int);
+	void compute_row(int);
 	void traverse_fragment_matrix(int);
 	double findMaximumSubfragment(std::vector<double>, int, int, std::map<std::pair<int, int>, std::string>, int);
 	std::vector<std::string> glue_edge_to_all_sequences(std::string, std::vector<std::string>, bool);
