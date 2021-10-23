@@ -4,10 +4,6 @@ project(denovo_sequencing LANGUAGES CXX)
 set (CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(extern/pybind11)
-add_subdirectory(DataStructures)
-include_directories(DataStructures)
 
-pybind11_add_module(denovo_sequencing DeNovoSequencingAlgorithm.cpp DeNovoSequencingAlgorithm.h DataStructures/AminoAcids.cpp DataStructures/AminoAcids.h DataStructures/SpectrumGraph.h DataStructures/FragmentWeightMatrix.cpp DataStructures/FragmentWeightMatrix.h)
+pybind11_add_module(denovo_sequencing DeNovoSequencingAlgorithm.cpp DeNovoSequencingAlgorithm.h)
 target_link_libraries(denovo_sequencing PUBLIC pybind11::embed)
-target_include_directories(denovo_sequencing PUBLIC DataStructures/)
-target_link_libraries(denovo_sequencing PUBLIC data_structures)
