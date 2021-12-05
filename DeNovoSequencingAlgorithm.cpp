@@ -27,6 +27,8 @@ std::mutex m1, m2, m3;
 int threads_executing = 0;
 int rows_completed = 0;
 
+FILE *fp;
+
 class AminoAcids {
 public:
     static std::map <std::string, float> amino_acids;
@@ -213,6 +215,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(const FragmentWeightMatrix &fragmentW
 FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spectrumPeaks) {
 	FragmentWeightMatrix::spectrumPeaks = spectrumPeaks;
 	edges = spectrumGraph.spectralEdges;
+	fp = fopen("/usr/src/app/progress.txt", "w+");
 	std::cout << "Number of peaks is: " << spectrumPeaks << std::endl;
 	for (int i = 0; i < spectrumPeaks * spectrumPeaks; i++) {
 		fragmentWeightMatrix.push_back(0);
@@ -228,6 +231,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 		traverse_thread = std::thread([&]() {this->FragmentWeightMatrix::compute_row(i);});
 		traverse_thread.join();
 		std::cout << "Thread number " << i+1 << " completed." << std::endl;
+		fprintf(fp, "%d \n", i);
 	}
 	pybind11::gil_scoped_acquire acquire;
 	double max_num_of_peaks = 0;
@@ -269,7 +273,8 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 // Initialization methods
 
 void DeNovoSequencingAlgorithm::run_denovo() {
-    std::string spectraFileName = "/Users/kassimsantone/Desktop/spectrum_list.txt";
+    std::string spectraFileName = "/usr/src/app/spectrum_list.txt";
+    std::cout << "File location is: " << spectraFileName << std::endl;
     std::ifstream spectraFile(spectraFileName);
     int first = 0;
     std::list<SpectrumGraph> spectrumGraphs, filteredSpectrumGraphs;
