@@ -49,6 +49,10 @@ float round_var(float var)
 
 // SpectrumGraph-related methods
 
+std::map<std::pair<int, int>, std::string> SpectrumGraph::computeSpectralPrefixSuffixConnectors(std::vector<Peak> spectralPeaks, std::map<std::pair<int, int>, std::string> spectralEdges) {
+
+}
+
 std::map<std::pair<int, int>, std::string> SpectrumGraph::computeSpectralEdges(std::vector<Peak> spectralPeaks) {
 	std::map<std::pair<int, int>, std::string> output_edges;
 	for (int i = 0; i < spectralPeaks.size(); i++) {
@@ -104,7 +108,19 @@ SpectrumGraph::SpectrumGraph(std::string spectralData) {
 	std::vector<Peak>::const_iterator firstPeak = spectralPeaks.begin();
 	std::vector<Peak>::const_iterator middlePeak = spectralPeaks.begin() + (int)(spectralPeaks.size() / 2);
 	std::vector<Peak> newSpectralPeaks = std::vector<Peak>(firstPeak, middlePeak);
+	std::cout << "First the peaks..." << std::endl;
+	for (int i = 0; i < spectralPeaks.size(); i++) {
+		std::cout << "Peak " << i << " has MZ: " << spectralPeaks.at(i).mz << std::endl;
+	}
 	spectralEdges = computeSpectralEdges(spectralPeaks);
+	spectralPrefixSuffixConecctors = computePrefixSuffixConnectors(spectralPeaks, spectralEdges);
+	std::map<std::pair<int, int>, std::string>::iterator it;
+	std::cout << "Now the edges..." << std::endl;
+	for(it = spectralEdges.begin(); it != spectralEdges.end(); it++) {
+		if (std::get<0>(it->first)==103) {
+			std::cout << "Pair of peaks: " << "(" << std::get<0>(it->first) << ", " << std::get<1>(it->first) << ") correspond to amino acid: " << it->second << "." << std::endl;
+		}
+	}
 	spectralPeaks = newSpectralPeaks;
 }
 
@@ -120,7 +136,7 @@ Peak::Peak(float mz, float intensity, float rt)
 double FragmentWeightMatrix::findMaximumSubfragment(std::vector<double> fragmentWeightMatrix, int i, int j, std::map<std::pair<int, int>, std::string> edges, int spectrumPeaks) {
 	double currentMaxfragment = -1;
 	std::vector<std::pair<int, int> > edges_without_amino_acids;
-	transform(edges.begin(), edges.end(), std::back_inserter(edges_without_amino_acids), [&](std::pair<std::pair<int, int>, std::string> edge) { return edge.first; });
+	std::transform(edges.begin(), edges.end(), std::back_inserter(edges_without_amino_acids), [&](std::pair<std::pair<int, int>, std::string> edge) { return edge.first; });
 	std::pair<int, int> final_pair;
 	std::string amino_acid;
 	for (int k = j - 1; k >= 0; k--) {
@@ -170,12 +186,18 @@ std::vector<std::string> FragmentWeightMatrix::find_sequence_from_fragment_posit
 	double max_prev_frag = -std::numeric_limits<double>::infinity();
 	std::pair<int, int> prev_frag_pair;
 	bool found = false;
+	//std::cout << "(" << i << ", " << j << ")" << std::endl;
 	std::vector<std::string> vector_1, vector_2;
 	for (int k = i - 1; k >= 0; k--) {
 		if (fragmentWeightMatrix.at(k * spectrumPeaks + j) > max_prev_frag && std::binary_search(edges_without_amino_acids.begin(), edges_without_amino_acids.end(), std::pair<int, int>(k, i))) {
 			max_prev_frag = fragmentWeightMatrix.at(k * spectrumPeaks + j);
 			prev_frag_pair = std::pair<int, int>(k, i);
 			found = true;
+			//std::cout << "AAA" << std::endl;
+			//std::cout << "Edge: " << edges[prev_frag_pair] << std::endl;
+			//std::cout << "Max num of peaks: " << max_num_of_peaks - 1 << std::endl;
+			//std::cout << "Optimal fragment position: " << "(" << k << "," << j << ")" << std::endl;
+			//std::cout << "BBB" << std::endl;
 			vector_1 = FragmentWeightMatrix::glue_edge_to_all_sequences(edges[prev_frag_pair], find_sequence_from_fragment_position(fragmentWeightMatrix, edges, edges_without_amino_acids, max_num_of_peaks - 1, std::pair<int, int>(k, j), spectrumPeaks, prefix_suffix_connector), true);
 		}
 	}
@@ -184,9 +206,16 @@ std::vector<std::string> FragmentWeightMatrix::find_sequence_from_fragment_posit
 			max_prev_frag = fragmentWeightMatrix.at(i * spectrumPeaks + k);
 			prev_frag_pair = std::pair<int, int>(k, j);
 			found = true;
+			//std::cout << "XXX" << std::endl;
+			//std::cout << "Edge: " << edges[prev_frag_pair] << std::endl;
+			//std::cout << "Max num of peaks: " << max_num_of_peaks - 1 << std::endl;
+			//std::cout << "Optimal fragment position: " << "(" << i << "," << k << ")" << std::endl;
+			//std::cout << "YYY" << std::endl;
 			vector_2 = FragmentWeightMatrix::glue_edge_to_all_sequences(edges[prev_frag_pair], find_sequence_from_fragment_position(fragmentWeightMatrix, edges, edges_without_amino_acids, max_num_of_peaks - 1, std::pair<int, int>(i, k), spectrumPeaks, prefix_suffix_connector), false);
 		}
 	}
+	//std::cout << "CCC" << std::endl;
+	//std::cout << "Found: " << found << std::endl;
 	if (!found) {
 		return empty_string_vector;
 	}
@@ -237,35 +266,46 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 	double max_num_of_peaks = 0;
 	std::pair<int, int> optimal_fragment_position;
 	std::vector<std::pair<int, int> > edges_without_amino_acids;
-	transform(edges.begin(), edges.end(), std::back_inserter(edges_without_amino_acids), [&](std::pair<std::pair<int, int>, std::string> edge) { return edge.first; });
+	std::transform(edges.begin(), edges.end(), std::back_inserter(edges_without_amino_acids), [&](std::pair<std::pair<int, int>, std::string> edge) { return edge.first; });
 	std::vector<std::string> prefix_suffix_connectors;
 	std::vector<std::pair<int, int> > optimal_fragment_positions;
 	std::map<std::pair<int, int>, double> fragment_to_num_of_peaks;
 	for (int i = 0; i < spectrumPeaks; i++) {
 		for (int j = 0; j < spectrumPeaks; j++) {
-			if (fragmentWeightMatrix.at(i * spectrumPeaks + j) == -std::numeric_limits<double>::infinity()) {
+			/*if (fragmentWeightMatrix.at(i * spectrumPeaks + j) == -std::numeric_limits<double>::infinity()) {
 				std::cout << fragmentWeightMatrix.at(i * spectrumPeaks + j) << " ";
 			}
 			else {
 				std::cout << (int)fragmentWeightMatrix.at(i * spectrumPeaks + j) << " ";
-			}
+			}*/
 			if (fragmentWeightMatrix[i * spectrumPeaks + j] > max_num_of_peaks) {
 				max_num_of_peaks = fragmentWeightMatrix[i * spectrumPeaks + j];
-			} 
-			optimal_fragment_position = std::pair<int, int>(i, j);
-			optimal_fragment_positions.push_back(optimal_fragment_position);
-			fragment_to_num_of_peaks[optimal_fragment_position] = fragmentWeightMatrix[i * spectrumPeaks + j];
+			}
+			if (fragmentWeightMatrix[i * spectrumPeaks + j] > -1) {
+				optimal_fragment_position = std::pair<int, int>(i, j);
+				optimal_fragment_positions.push_back(optimal_fragment_position);
+				fragment_to_num_of_peaks[optimal_fragment_position] = fragmentWeightMatrix[i * spectrumPeaks + j];
+			}
 		}
 	}
-	std::vector<std::pair<double, std::pair<int, int> > > actual_optimal_fragment_positions;
-	std::cout << "The maximum number of peaks in a potential peptide from the spectrum is: " + std::to_string(max_num_of_peaks);
-	std::vector<std::pair<int, int> > optimal_fragment_positions_without_peaks;
-	transform(actual_optimal_fragment_positions.begin(), actual_optimal_fragment_positions.end(), std::back_inserter(optimal_fragment_positions_without_peaks), [&](std::pair<double, std::pair<int, int> > actual_optimal_fragment_position) { return actual_optimal_fragment_position.second; });
-	std::vector<std::vector<std::string> > best_fragments;
-	for (int i = 0; i < optimal_fragment_positions_without_peaks.size(); i++) {
-		best_fragments.push_back(FragmentWeightMatrix::find_sequence_from_fragment_position(fragmentWeightMatrix, edges, edges_without_amino_acids, actual_optimal_fragment_positions.at(i).first, optimal_fragment_positions_without_peaks.at(i), spectrumPeaks, prefix_suffix_connectors.at(i)));
+	std::vector<std::pair<double, std::pair<int, int>>> actual_optimal_fragment_positions;
+	for (int i = 0; i < optimal_fragment_positions.size(); i++) {
+		// Do an additional check to see if first element of pair connects to total size minus second element (ie connecting first half to second half and set prefix-suffix connectors accordingly)
+		if (fragment_to_num_of_peaks[optimal_fragment_positions.at(i)] > max_num_of_peaks - 3 && std::binary_search(edges_without_amino_acids.begin(), edges_without_amino_acids.end(), optimal_fragment_positions.at(i))) {
+			actual_optimal_fragment_positions.push_back(std::pair<double, std::pair<int, int>>(fragment_to_num_of_peaks[optimal_fragment_positions.at(i)], optimal_fragment_positions.at(i)));
+		}
 	}
-	for (int i = 0; i < optimal_fragment_positions_without_peaks.size(); i++) {
+	std::cout << "The maximum number of peaks in a potential peptide from the spectrum is: " + std::to_string(max_num_of_peaks);
+	std::vector<std::vector<std::string> > best_fragments;
+	//for (int i = 0; i < optimal_fragment_positions.size(); i++) {
+		std::cout << "Inside?" << std::endl;
+		std::vector<std::string> new_fragment = FragmentWeightMatrix::find_sequence_from_fragment_position(fragmentWeightMatrix, edges, edges_without_amino_acids, actual_optimal_fragment_positions.at(0).first, actual_optimal_fragment_positions.at(0).second, spectrumPeaks, prefix_suffix_connectors.at(0));
+		best_fragments.push_back(new_fragment);
+		for (int j = 0; j < new_fragment.size(); j++) {
+			std::cout << new_fragment.at(j) << " ";
+		}
+	//}
+	for (int i = 0; i < optimal_fragment_positions.size(); i++) {
 		std::cout << "The optimal peptide is with prefix-suffix connector " << prefix_suffix_connectors.at(i) << " is " << best_fragments.at(i).at(0) << "." << std::endl;
 	}
 }
@@ -273,7 +313,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 // Initialization methods
 
 void DeNovoSequencingAlgorithm::run_denovo() {
-    std::string spectraFileName = "/usr/src/app/spectrum_list.txt";
+    std::string spectraFileName = "/usr/src/app/cancer_spectrum_list.txt";
     std::cout << "File location is: " << spectraFileName << std::endl;
     std::ifstream spectraFile(spectraFileName);
     int first = 0;
