@@ -339,6 +339,8 @@ cellobject.h
 /usr/local/include/python3.9/cellobject.h
 iterobject.h
 /usr/local/include/python3.9/iterobject.h
+cpython/initconfig.h
+/usr/local/include/python3.9/cpython/initconfig.h
 genobject.h
 /usr/local/include/python3.9/genobject.h
 descrobject.h
@@ -359,8 +361,6 @@ codecs.h
 /usr/local/include/python3.9/codecs.h
 pyerrors.h
 /usr/local/include/python3.9/pyerrors.h
-cpython/initconfig.h
-/usr/local/include/python3.9/cpython/initconfig.h
 pythread.h
 /usr/local/include/python3.9/pythread.h
 pystate.h
@@ -483,8 +483,6 @@ cpython/code.h
 /usr/local/include/python3.9/cpython/pymem.h
 
 /usr/local/include/python3.9/cpython/pystate.h
-cpython/initconfig.h
-/usr/local/include/python3.9/cpython/cpython/initconfig.h
 
 /usr/local/include/python3.9/cpython/sysmodule.h
 
@@ -746,6 +744,12 @@ sstream
 thread
 -
 mutex
+-
+queue
+-
+set
+-
+chrono
 -
 pybind11/pybind11.h
 -
