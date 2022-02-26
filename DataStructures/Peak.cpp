@@ -1,8 +1,9 @@
 #include "Peak.h"
 
-Peak::Peak(float mz, float intensity, float rt)
+Peak::Peak(float mass, int charge, float intensity, float rt)
 {
-	this->mz = mz;
+	this->mass = mass;
+	this->charge = charge;
 	this->intensity = intensity;
 	this->rt = rt;
 }

@@ -35,6 +35,7 @@ std::ofstream MyMZs("/usr/src/app/output_mz.txt");
 std::ofstream MyPrefixSuffix("/usr/src/app/output_prefix_suffix.txt");
 std::ofstream MyTesting("/usr/src/app/testing.txt");
 std::ofstream MyBIons("/usr/src/app/b_ions.txt");
+std::ofstream MyPeaks("/usr/src/app/peaks.txt");
 
 FILE *fp;
 
@@ -53,7 +54,7 @@ AminoAcids::AminoAcids() {
 struct less_than_mz {
 	inline bool operator()(const Peak& peak_1, const Peak& peak_2)
 	{
-		return (peak_1.mz < peak_2.mz);
+		return (peak_1.mass < peak_2.mass);
 	}
 };
 
@@ -65,22 +66,22 @@ float round_var(float var)
 
 // SpectrumGraph-related methods
 
-std::vector<Peak> glue_reversal(std::vector<Peak> tempSpectralPeaks, float max_mz) {
-	tempSpectralPeaks.push_back(Peak(max_mz, tempSpectralPeaks.at(tempSpectralPeaks.size()-1).intensity, tempSpectralPeaks.at(0).rt));
+std::vector<Peak> glue_reversal(std::vector<Peak> tempSpectralPeaks, int charge, float max_mz) {
+	tempSpectralPeaks.push_back(Peak(max_mz, charge, tempSpectralPeaks.at(tempSpectralPeaks.size()-1).intensity, tempSpectralPeaks.at(0).rt));
 	//std::cout << "After gluing max mz size is: " << tempSpectralPeaks.size() << "." << std::endl;
 	std::vector<Peak> finalSpectralPeaks = tempSpectralPeaks;
 	for (int i = 0; i < tempSpectralPeaks.size()-1; i++) {
 		//std::cout << "On peak: " << i << "." << std::endl;
 		Peak tempPeak = tempSpectralPeaks.at(i);
-		finalSpectralPeaks.push_back(Peak(max_mz-tempPeak.mz, tempPeak.intensity, tempPeak.rt));
+		finalSpectralPeaks.push_back(Peak(max_mz-tempPeak.mass, charge, tempPeak.intensity, tempPeak.rt));
 	}
 	//std::cout << "After for loop size is: " << finalSpectralPeaks.size() << "." << std::endl;
 	return finalSpectralPeaks;
 }
 
-std::map<std::pair<int, int>, std::string> SpectrumGraph::computePrefixSuffixConnectors(std::vector<Peak> spectralPeaks, std::map<std::pair<int, int>, std::string> spectralEdges, float midpoint, int charge) {
-	std::cout << "Midpoint is: " << midpoint << std::endl;
-	std::cout << "Peak at 45th index: " << spectralPeaks.at(44).mz << std::endl;
+std::map<std::pair<int, int>, std::string> SpectrumGraph::computePrefixSuffixConnectors(std::vector<Peak> spectralPeaks, std::map<std::pair<int, int>, std::string> spectralEdges, float midpoint) {
+	//std::cout << "Midpoint is: " << midpoint << std::endl;
+	//std::cout << "Peak at 45th index: " << spectralPeaks.at(44).mz << std::endl;
 	std::map<std::pair<int, int>, std::string> prefix_suffix_connectors;
 	int count = 0;
 	/*while (spectralPeaks.at(count).mz < midpoint-187) {
@@ -89,48 +90,59 @@ std::map<std::pair<int, int>, std::string> SpectrumGraph::computePrefixSuffixCon
 	count++;*/
 	std::map<std::string, float>::iterator aminoIt;
 	bool notThereYet = true;
+	std::cout << "Number of peaks is: " << spectralPeaks.size() << "." << std::endl;
 	while (count < spectralPeaks.size()) {
 		std::vector<int> indicesOfHigherPeaks;
 		std::vector<std::string> aminoAcidsVector;
 		// Loop through amino acids and check if there is a corresponding point within a threshold of this plus that amino acid mass
 		for (aminoIt = amino_acids.begin(); aminoIt != amino_acids.end(); aminoIt++) {
-			std::vector<Peak>::iterator it = std::find_if (spectralPeaks.begin(), spectralPeaks.end(), [&](Peak peak){return std::abs(midpoint*2-(peak.mz+spectralPeaks.at(count).mz+aminoIt->second))<1;});
-			/*if (count==44 && aminoIt->first=="K" && charge==1) {
-				std::cout << "Currently on amino acid K." << std::endl;
-				std::cout << "We need peak with MZ: " << midpoint*2-(spectralPeaks.at(count).mz+aminoIt->second) << "." << std::endl;
-			}*/
+			std::vector<Peak>::iterator it = std::find_if (spectralPeaks.begin(), spectralPeaks.end(), [&](Peak peak){return std::abs(midpoint*2-(peak.mass+spectralPeaks.at(count).mass+aminoIt->second))<1;});
+			if (count==85) {
+				std::cout << "Peak at index 85 has mass: " << spectralPeaks.at(85).mass << "." << std::endl;
+				std::cout << "Mass difference is: " << midpoint*2-(it->mass+spectralPeaks.at(count).mass+aminoIt->second) << "." << std::endl;
+				std::cout << "Corresponding peak has mass: " << it->mass << "." << std::endl;
+				std::cout << "Corresponding amino acid is: " << aminoIt->first << "." << std::endl;
+			}
 			if (it!=spectralPeaks.end()) {
 				int index = it - spectralPeaks.begin();
-				//std::cout << "Index of amino acid is: " << index-it << "." << std::endl;
+				if (count==85 && index==122) {
+					std::cout << "Expected amino acid is: K, actual amino acid is: " << aminoIt->first << "." << std::endl;
+				}
+				MyPeaks << "Index of amino acid: " << aminoIt->first << " is: " << index << "." << std::endl;
 				indicesOfHigherPeaks.push_back(index);
 				aminoAcidsVector.push_back(aminoIt->first);
 			}
 		}
+		if (count==85) {
+			for (int i = 0; i < indicesOfHigherPeaks.size(); i++) {
+				std::cout << "Peak at index " << i << " is " << indicesOfHigherPeaks.at(i) << "." << std::endl;
+			}
+		}
 		for (int i = 0; i < indicesOfHigherPeaks.size(); i++) {
-			std::vector<Peak>::iterator it = std::find_if (spectralPeaks.begin(), spectralPeaks.end(), [&](Peak peak){return std::abs((peak.mz+spectralPeaks.at(indicesOfHigherPeaks.at(i)).mz)-midpoint*2)<2;});
+			std::vector<Peak>::iterator it = std::find_if (spectralPeaks.begin(), spectralPeaks.end(), [&](Peak peak){return std::abs((peak.mass+spectralPeaks.at(indicesOfHigherPeaks.at(i)).mass)-midpoint*2)<2;});
 			// TODO: Count all modified indices not just first
-			//std::cout << "Prefix-suffix of: " << aminoAcidsVector.at(i) << " being added." << std::endl;
-			if (count==44 && aminoAcidsVector.at(i)=="K" && charge==1) {
+			MyPrefixSuffix << "Prefix-suffix of: " << aminoAcidsVector.at(i) << " being added with indicies (" << count << ", " << indicesOfHigherPeaks.at(i) << ")." << std::endl;
+			if (count==85 && indicesOfHigherPeaks.at(i)==122) {
+				std::cout << "The mass is: " << it->mass << "." << std::endl;
 				std::cout << "In here..." << std::endl;
-				prefix_suffix_connectors.insert(std::pair<std::pair<int, int>, std::string>(std::pair<int, int>(count, it-spectralPeaks.begin()), aminoAcidsVector.at(i)));
+				prefix_suffix_connectors.insert(std::pair<std::pair<int, int>, std::string>(std::pair<int, int>(count, indicesOfHigherPeaks.at(i)), aminoAcidsVector.at(i)));
 			}
 		}
 		count++;
 	}
-
+	std::cout << "Prefix-suffix connectors size is: " << prefix_suffix_connectors.size() << "." << std::endl;
 	std::cout << "Max peak: " << midpoint*2 << "." << std::endl;
 	
 	return prefix_suffix_connectors;
 }
 
-std::map<std::pair<int, int>, std::string> SpectrumGraph::computeSpectralEdges(std::vector<std::vector<Peak>> spectralPeaks, int m) {
+std::map<std::pair<int, int>, std::string> SpectrumGraph::computeSpectralEdges(std::vector<Peak> spectralPeaks) {
 	std::map<std::pair<int, int>, std::string> output_edges;
-	std::vector<Peak> chargedSpectralPeaks = spectralPeaks.at(m-1);
-	for (int i = 0; i < chargedSpectralPeaks.size(); i++) {
+	for (int i = 0; i < spectralPeaks.size(); i++) {
 		// Check if spectralPeaks differences are in dictionary (maybe make dictionary round down to near 1/10^n then check if either equal
 		// or less than actual value by 1/10^n
-		for (int j = i + 1; j < chargedSpectralPeaks.size(); j++) {
-			float peak_diff = chargedSpectralPeaks.at(j).mz - chargedSpectralPeaks.at(i).mz;
+		for (int j = i + 1; j < spectralPeaks.size(); j++) {
+			float peak_diff = spectralPeaks.at(j).mass - spectralPeaks.at(i).mass;
 			if (peak_diff >= 187) {
 				break;
 			}
@@ -142,7 +154,7 @@ std::map<std::pair<int, int>, std::string> SpectrumGraph::computeSpectralEdges(s
 				for (it = amino_acids.begin(); it != amino_acids.end(); it++) {
 					if (std::abs((it->second)-peak_diff)<1.0) {
 						MyMZs << "(" << i << ", " << j << ")" << std::endl;
-						MyMZs << "(" << chargedSpectralPeaks.at(i).mz << ", " << chargedSpectralPeaks.at(j).mz << ")" << std::endl; 
+						MyMZs << "(" << spectralPeaks.at(i).mass << ", " << spectralPeaks.at(j).mass << ")" << std::endl; 
 						MyMZs << "Amino acid is: " << it->first << std::endl << std::endl; 
 						//output_edges.emplace_back(std::pair<Peak, Peak>(spectralPeaks.at(i), spectralPeaks.at(j)));
 						output_edges[std::pair <int, int>(i, j)] = it->first;
@@ -165,7 +177,7 @@ SpectrumGraph::SpectrumGraph(std::string spectralData, double precursor_mz, doub
 	std::string del = ",";
 	std::string peak_info;
 	std::stringstream ss;
-	float mz, rt, intensity;
+	float mass, rt, intensity;
 	iss >> rt;
 	std::vector<Peak> baseSpectralPeaks;
 	//std::cout << "About to enter while loop..." << std::endl;
@@ -173,80 +185,80 @@ SpectrumGraph::SpectrumGraph(std::string spectralData, double precursor_mz, doub
 		int start = 0;
 		int end = peak_info.find(del);
 		ss << peak_info.substr(start, end - start) << std::endl;
-		mz = std::stof(ss.str());
+		mass = std::stof(ss.str());
 		start = end + del.size();
 		end = peak_info.size();
 		ss.str("");
 		ss.clear();
 		ss << peak_info.substr(start, end - start) << std::endl;
 		intensity = std::stof(ss.str());
-		baseSpectralPeaks.push_back(Peak(mz, intensity, rt));
+		baseSpectralPeaks.push_back(Peak(mass, 1, intensity, rt));
 		ss.str("");
 		ss.clear();
 	}
-	baseSpectralPeaks = glue_reversal(baseSpectralPeaks, precursorMass);
+	baseSpectralPeaks = glue_reversal(baseSpectralPeaks, 1, precursorMass);
 	std::sort(baseSpectralPeaks.begin(), baseSpectralPeaks.end(), less_than_mz());
-	spectralPeaks.push_back(baseSpectralPeaks);
-	//std::cout << "Base spectral peaks successfully pushed onto spectral peaks: " << spectralPeaks.size() << "." << std::endl;
-	//std::cout << "Number of peaks in base spectral peaks: " << spectralPeaks.at(0).size() << "." << std::endl;
-	//std::cout << "Max peak is: " << spectralPeaks.at(0).at(spectralPeaks.at(0).size()-1).mz << "." << std::endl;
-	std::cout << "Precursor mass is: " << precursorMass << "." << std::endl;
-	int count;
+	MyPeaks << "Base spectral peaks..." << std::endl;
+	for (int i = 0; i < baseSpectralPeaks.size(); i++) {
+		MyPeaks << "Mass: " << baseSpectralPeaks.at(i).mass << ", Charge: " << baseSpectralPeaks.at(i).charge << "." << std::endl;
+	}
+	std::vector<Peak>::iterator specIt;
+	float maxPeak = (*(baseSpectralPeaks.end()-1)).mass;
+	int count = 0;
+	std::cout << "Max peak is: " << maxPeak/2 << std::endl;
+	for (specIt = baseSpectralPeaks.begin(); (*specIt).mass < maxPeak/2; specIt++) {
+		std::cout << "Current peak is: " << (*specIt).mass << "." << std::endl;
+		count++;
+	}
+	std::cout << "Count is: " << count << std::endl;
+	std::vector<Peak>::iterator middlePeak = baseSpectralPeaks.begin() + count;
+	/*MyPeaks << "Middle peak is: " << (*middlePeak).mass << std::endl;
+	std::vector<Peak> newBaseSpectralPeaks = std::vector<Peak>(baseSpectralPeaks.begin(), middlePeak);*/
+	SpectrumGraph::spectralPeaks.insert(SpectrumGraph::spectralPeaks.end(), baseSpectralPeaks.begin(), baseSpectralPeaks.end());
 	for (int i = 2; i <= precursorCharge; i++) {
 		std::vector<Peak> tempSpectralPeaks;
-		count = 0;
-		while (baseSpectralPeaks.at(count).mz<precursorMass/i) {
+		int count = 0;
+		while (baseSpectralPeaks.at(count).mass<precursorMass/i) {
 			//std::cout << "Current peak has MZ: " << baseSpectralPeaks.at(count).mz << std::endl;
-			Peak tempPeak = Peak(baseSpectralPeaks.at(count).mz/i, baseSpectralPeaks.at(count).intensity, baseSpectralPeaks.at(count).rt);
+			Peak tempPeak = Peak(baseSpectralPeaks.at(count).mass*i, i, baseSpectralPeaks.at(count).intensity, baseSpectralPeaks.at(count).rt);
 			tempSpectralPeaks.push_back(tempPeak);
 			count += 1;
 		}
-		std::cout << "Number of peaks in charge " << i << " spectral peaks: " << tempSpectralPeaks.size() << "." << std::endl;
-		tempSpectralPeaks = glue_reversal(tempSpectralPeaks, precursorMass/i);
+		tempSpectralPeaks = glue_reversal(tempSpectralPeaks, i, precursorMass);
 		std::sort(tempSpectralPeaks.begin(), tempSpectralPeaks.end(), less_than_mz());
-		std::cout << "Number of peaks in charge (after gluing reversal) " << i << " spectral peaks: " << tempSpectralPeaks.size() << "." << std::endl;
-		spectralPeaks.push_back(tempSpectralPeaks);
-	}
-	//std::cout << "Exited for loop." << std::endl;
-	std::vector<float> middlePeaks;
-	std::vector<std::vector<Peak> > newSpectralPeaks;
-	for (int i = 1; i <= precursorCharge; i++) {
-		std::vector<Peak>::iterator specIt;
-		std::cout << "Just before..." << std::endl;
-		std::cout << "Size of current index is: " << spectralPeaks.at(i-1).size() << "." << std::endl;
-		float maxPeak = (*(spectralPeaks.at(i-1).end()-1)).mz;
-		std::cout << "Max peak is: " << maxPeak << std::endl;
-		int count = 0;
-		for (specIt = spectralPeaks.at(i-1).begin(); (*specIt).mz < maxPeak/2; specIt++) {
+		MyPeaks << "Spectral peaks with charge: " << i << "." << std::endl;
+		for (int i = 0; i < tempSpectralPeaks.size(); i++) {
+			MyPeaks << "Mass: " << tempSpectralPeaks.at(i).mass << ", Charge: " << tempSpectralPeaks.at(i).charge << "." << std::endl;
+		}
+		std::cout << "AAA" << std::endl;
+		/*std::vector<Peak>::iterator specIt;
+		float maxPeak = (*(tempSpectralPeaks.end()-1)).mass;
+		std::cout << "BBB" << std::endl;
+		for (specIt = tempSpectralPeaks.begin(); (*specIt).mass < maxPeak/2; specIt++) {
+			std::cout << "Current mass is: " << (*specIt).mass << " and count is: " << count+1 << std::endl;
 			count++;
 		}
-		std::cout << "Count is: " << count << std::endl;
-		std::vector<Peak>::iterator middlePeak = spectralPeaks.at(i-1).begin() + count;
-		std::cout << "Middle peak is: " << (*middlePeak).mz << std::endl;
-		std::vector<Peak> newTempSpectralPeaks = std::vector<Peak>(spectralPeaks.at(i-1).begin(), middlePeak);
-		newSpectralPeaks.push_back(newTempSpectralPeaks);
-		std::cout << "Bottom half of peaks has " << newTempSpectralPeaks.size() << " peaks." << std::endl;
-		middlePeaks.push_back((*middlePeak).mz);
+		std::vector<Peak>::iterator middlePeak = tempSpectralPeaks.begin() + count;
+		std::vector<Peak> newTempSpectralPeaks = std::vector<Peak>(tempSpectralPeaks.begin(), middlePeak);
+		std::cout << "Number of peaks in charge " << i << ": " << newTempSpectralPeaks.size() << "." << std::endl;*/
+		SpectrumGraph::spectralPeaks.insert(SpectrumGraph::spectralPeaks.end(), tempSpectralPeaks.begin(), tempSpectralPeaks.end());
+		std::sort(SpectrumGraph::spectralPeaks.begin(), SpectrumGraph::spectralPeaks.end(), less_than_mz());
 	}
-	for (int i = 1; i <= precursorCharge; i++) {
-		// Write spectral peaks data to file HERE
-		spectralEdges.push_back(computeSpectralEdges(spectralPeaks, i));
-		//std::cout << "Edges in spectral data with charge: " << i << " is " << spectralEdges.at(i-1).size() << "." << std::endl;
+	MyPeaks << "Final peaks..." << std::endl;
+	for (int i = 0; i < SpectrumGraph::spectralPeaks.size(); i++) {
+		MyPeaks << "Mass: " << SpectrumGraph::spectralPeaks.at(i).mass << ", Charge: " << SpectrumGraph::spectralPeaks.at(i).charge << "." << std::endl;
 	}
+	SpectrumGraph::spectralEdges = computeSpectralEdges(SpectrumGraph::spectralPeaks);
 	MyMZs.close();
-	for (int i = 1; i <= precursorCharge; i++) {
-		std::cout << "About to compute prefix-suffix connectors for charge " << i << "." << std::endl;
-		spectralPrefixSuffixConnectors.push_back(computePrefixSuffixConnectors(spectralPeaks.at(i-1), spectralEdges.at(i-1), middlePeaks.at(i-1), i));
-		std::cout << "Prefix-suffix connector with charge: " << i << " has size " << spectralPrefixSuffixConnectors.at(i-1).size() << "." << std::endl;
-	}
-	spectralPeaks = newSpectralPeaks;
-	std::cout << "Number of spectral peaks vectors is: " << spectralPeaks.size() << "." << std::endl;
-	std::cout << "Number of spectral edges vectors is: " << spectralEdges.size() << "." << std::endl;
+	spectralPrefixSuffixConnectors = computePrefixSuffixConnectors(SpectrumGraph::spectralPeaks, SpectrumGraph::spectralEdges, (*middlePeak).mass);
+	std::cout << "Number of spectral peaks vectors is: " << SpectrumGraph::spectralPeaks.size() << "." << std::endl;
+	std::cout << "Number of spectral edges vectors is: " << SpectrumGraph::spectralEdges.size() << "." << std::endl;
 }
 
-Peak::Peak(float mz, float intensity, float rt)
+Peak::Peak(float mass, int charge, float intensity, float rt)
 {
-	this->mz = mz;
+	this->mass = mass;
+	this->charge = charge;
 	this->intensity = intensity;
 	this->rt = rt;
 }
@@ -357,7 +369,7 @@ std::vector<std::vector<std::pair<std::string, int> > > computeMassDecomposition
 		}*/
 	}
 	if (amino_index!=19) {
-		for (int i = 0; i < 1+(int)(ion_mass/amino_acids_vector.at(amino_index).second); i++) {
+		for (int i = 0; i < std::min(3, 1+(int)(ion_mass/amino_acids_vector.at(amino_index).second)); i++) {
 			if (i==0 && amino_acids_vector.at(amino_index).first=="T" && std::abs(ion_mass-102.054)<0.1) {
 				MyTesting << "Ion mass is: " << ion_mass << "." << std::endl;
 				MyTesting << "Getting somewhere (EHKST): " << ion_mass-amino_acids_vector.at(amino_index).second << "." << std::endl;
@@ -387,8 +399,8 @@ std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> 
 		final_sequences.first.push_back(prefix_suffix_connector);
 		final_sequences.second.push_back(current_edges);
 		std::cout << "Prefix-suffix connector is: " << prefix_suffix_connector << "." << std::endl;
-		MyPrefixSuffix << "Prefix-suffix connector is: " << prefix_suffix_connector << "." << std::endl;
-		MyPrefixSuffix << "Corresponding to edge: (" << current_edges.at(0).first << ", " << current_edges.at(0).second << ")." << std::endl;
+		//MyPrefixSuffix << "Prefix-suffix connector is: " << prefix_suffix_connector << "." << std::endl;
+		//MyPrefixSuffix << "Corresponding to edge: (" << current_edges.at(0).first << ", " << current_edges.at(0).second << ")." << std::endl;
 	}
 	//double max_prev_frag = -std::numeric_limits<double>::infinity();
 	//std::cout << "Current edge: (" << current_edges.at(0).first << ", " << current_edges.at(0).second << ")." << std::endl;
@@ -530,8 +542,8 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 	}
 	std::cout << "The maximum number of peaks in a potential peptide from the spectrum is: " + std::to_string(max_num_of_peaks);
 	std::vector<std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > > best_fragments;
-	std::cout << "Size of current prefix-suffix connector iterator is: " << spectrumGraph.spectralPrefixSuffixConnectors.at(0).size() << "." << std::endl;
-	for (std::map<std::pair<int, int>, std::string>::iterator it = spectrumGraph.spectralPrefixSuffixConnectors.at(0).begin(); it != spectrumGraph.spectralPrefixSuffixConnectors.at(0).end(); it++) {
+	std::cout << "Size of current prefix-suffix connector iterator is: " << spectrumGraph.spectralPrefixSuffixConnectors.size() << "." << std::endl;
+	for (std::map<std::pair<int, int>, std::string>::iterator it = spectrumGraph.spectralPrefixSuffixConnectors.begin(); it != spectrumGraph.spectralPrefixSuffixConnectors.end(); it++) {
 		std::cout << "Prefix-suffix connector is: " << it->second << "." << std::endl;
 		std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > final_sequences;
 		std::vector<std::pair<int, int>> current_edges;
@@ -549,6 +561,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 				}
 				MyBIons << std::endl;
 		}
+		// Make 2 separate find_b_sequence_from_fragment_position and find_y_sequence_from_fragment_position functions for finding peptide sequences
 		std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > new_fragment = FragmentWeightMatrix::find_sequence_from_fragment_position(final_sequences, fragmentWeightMatrix, edges, edges_without_amino_acids, spectrumPeaks, current_edges, it->second);
 		best_fragments.push_back(new_fragment);
 	}
@@ -605,9 +618,7 @@ void DeNovoSequencingAlgorithm::run_denovo() {
     std::cout << "Spectrum graphs size is: " << spectrumGraphs.size() << "." << std::endl;
     for (it = spectrumGraphs.begin(); it != spectrumGraphs.end(); it++) {
     	std::cout << "About to call fragment weight matrix constructor..." << std::endl;
-    	for (int i = 1; i <= precursor_charge; i++) {
-        	fragmentWeightMatrices.push_back(FragmentWeightMatrix(*it, it->spectralPeaks.at(i-1).size(), it->spectralEdges.at(i-1)));
-    	}
+        fragmentWeightMatrices.push_back(FragmentWeightMatrix(*it, it->spectralPeaks.size(), it->spectralEdges));
     }
     MyFile.close();
 }

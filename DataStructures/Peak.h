@@ -5,8 +5,8 @@
 
 class Peak {
 public:
-	float mz, intensity, rt;
-	Peak(float mz, float intensity, float rt);/* {
+	float mass, charge, intensity, rt;
+	Peak(float mass, int charge, float intensity, float rt);/* {
 		this->mz = mz;
 		this->intensity = intensity;
 		this->rt = rt;
