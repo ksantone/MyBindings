@@ -6,15 +6,15 @@
 #include <queue>
 #include <set>
 #include <chrono>
-#include <pybind11/pybind11.h>
+/*#include <pybind11/pybind11.h>
 #include <pybind11/embed.h>
 #include <pybind11/eval.h>
-#include <pybind11/iostream.h>
+#include <pybind11/iostream.h>*/
 #include "DataStructures/FragmentWeightMatrix.h"
 #include "DataStructures/SpectrumGraph.h"
 #include "DeNovoSequencingAlgorithm.h"
 
-namespace py = pybind11;
+//namespace py = pybind11;
 
 // Global variables and classes
 
@@ -632,7 +632,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 		fragmentWeightMatrix.at(i + i * spectrumPeaks) = -std::numeric_limits<double>::infinity();
 	}
 	std::cout << "Just before thread execution!" << std::endl;
-	pybind11::gil_scoped_release release;
+	//pybind11::gil_scoped_release release;
 	std::thread traverse_thread;
 	for (int i = 0; i <= spectrumPeaks; i++) {
 		//std::cout << "On thread number: " << i+1 << "." << std::endl;
@@ -641,7 +641,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 		//std::cout << "Thread number " << i+1 << " completed." << std::endl;
 		fprintf(fp, "%d \n", i);
 	}
-	pybind11::gil_scoped_acquire acquire;
+	//pybind11::gil_scoped_acquire acquire;
 	double max_num_of_peaks = 0;
 	std::pair<int, int> optimal_fragment_position;
 	std::vector<std::pair<int, int> > edges_without_amino_acids;
@@ -837,7 +837,7 @@ int main() {
 
 // pybind11-related matters
 
-PYBIND11_MODULE(denovo_sequencing, handle) {
+/*PYBIND11_MODULE(denovo_sequencing, handle) {
 	handle.doc() = "This is the DeNovo sequencing algorithm.";
 	handle.def("main", 
     []() {
@@ -846,4 +846,4 @@ PYBIND11_MODULE(denovo_sequencing, handle) {
     });
 
 	py::class_<AminoAcids>(handle, "AminoAcids").def(py::init<>());
-}
+}*/
