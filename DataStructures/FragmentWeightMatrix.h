@@ -25,7 +25,8 @@ public:
 	void traverse_fragment_matrix(int);
 	double findMaximumSubfragment(std::vector<double>, int, int, std::map<std::pair<int, int>, std::string>, int);
 	std::vector<std::string> glue_edge_to_all_sequences(std::string, std::pair<int, int>, std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > >, bool);
-	std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > find_sequence_from_fragment_position(std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > >, std::vector<double>, std::map<std::pair<int, int>, std::string>, std::vector<std::pair<int, int> >, int, std::vector<std::pair<int, int> >, std::string);
+	std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > find_b_sequence_from_fragment_position(std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > >, std::vector<double>, std::map<std::pair<int, int>, std::string>, std::vector<std::pair<int, int> >, int, std::vector<std::pair<int, int> >, std::string, std::vector<std::vector<std::pair<std::string, int> > >, std::vector<Peak>);
+	std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > find_y_sequence_from_fragment_position(std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > >, std::vector<double>, std::map<std::pair<int, int>, std::string>, std::vector<std::pair<int, int> >, int, std::vector<std::pair<int, int> >, std::string, std::vector<std::vector<std::pair<std::string, int> > >, std::vector<Peak>);
 	std::vector<std::vector<std::pair<int, int> > > glue_edge_to_position_vector(std::pair<int, int>, std::vector<std::vector<std::pair<int, int> > >, bool);
 	std::map<std::pair<int, int>, std::string> edges;
 	FragmentWeightMatrix(SpectrumGraph, int, std::map<std::pair<int, int>, std::string>);

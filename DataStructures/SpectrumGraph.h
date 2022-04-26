@@ -12,6 +12,7 @@ public:
 	double precursorMass;
 	double precursorCharge;
 	std::vector<Peak> spectralPeaks;
+	std::vector<Peak> unmodifiedFinalSpectralPeaks;
 	std::map<std::pair<int, int>, std::string> spectralEdges;
 	std::vector<std::pair<std::vector<std::string>, std::vector<std::string> > > computeMassDecomposition(std::pair<int, int>, std::vector<std::vector<Peak> >);
 	std::map<std::pair<int, int>, std::string> computeSpectralEdges(std::vector<Peak>);
