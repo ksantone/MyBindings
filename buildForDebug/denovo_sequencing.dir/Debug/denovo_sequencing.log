@@ -1,0 +1,61 @@
+﻿  Building Custom Rule C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/CMakeLists.txt
+  DeNovoSequencingAlgorithm.cpp
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(66,14): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(105,15): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(112,14): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(183,32): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(186,27): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(187,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(198,58): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(240,59): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(286,17): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(527,7): warning C4101: 'found': unreferenced local variable
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(528,6): warning C4101: 'min_peak': unreferenced local variable
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(523,6): warning C4101: 'i': unreferenced local variable
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(634,7): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(811,36): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(835,111): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\include\utility(193,54): warning C4244: 'initializing': conversion from '_Ty' to '_Ty2', possible loss of data
+          with
+          [
+              _Ty=double
+          ]
+          and
+          [
+              _Ty2=float
+          ]
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(25): message : see reference to function template instantiation 'std::pair<const std::string,float>::pair<const char(&)[2],double,0>(_Other1,_Other2 &&) noexcept(false)' being compiled
+          with
+          [
+              _Other1=const char (&)[2],
+              _Other2=double
+          ]
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(23): message : see reference to function template instantiation 'std::pair<const std::string,float>::pair<const char(&)[2],double,0>(_Other1,_Other2 &&) noexcept(false)' being compiled
+          with
+          [
+              _Other1=const char (&)[2],
+              _Other2=double
+          ]
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\include\utility(193,16): warning C4244: 'initializing': conversion from '_Ty' to '_Ty1', possible loss of data
+          with
+          [
+              _Ty=int
+          ]
+          and
+          [
+              _Ty1=float
+          ]
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(544): message : see reference to function template instantiation 'std::pair<float,std::string>::pair<int,const char(&)[1],0>(_Other1 &&,_Other2) noexcept(false)' being compiled
+          with
+          [
+              _Other1=int,
+              _Other2=const char (&)[1]
+          ]
+C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\DeNovoSequencingAlgorithm.cpp(544): message : see reference to function template instantiation 'std::pair<float,std::string>::pair<int,const char(&)[1],0>(_Other1 &&,_Other2) noexcept(false)' being compiled
+          with
+          [
+              _Other1=int,
+              _Other2=const char (&)[1]
+          ]
+     Creating library C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/Debug/denovo_sequencing.lib and object C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/Debug/denovo_sequencing.exp
+  denovo_sequencing.vcxproj -> C:\Users\Kassim Santone\Desktop\DjangoCelery\pipelines\MyBindings\buildForDebug\Debug\denovo_sequencing.cp37-win_amd64.pyd

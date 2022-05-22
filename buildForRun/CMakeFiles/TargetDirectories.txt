@@ -1,0 +1,5 @@
+/usr/src/app/pipelines/MyBindings/buildForRun/CMakeFiles/rebuild_cache.dir
+/usr/src/app/pipelines/MyBindings/buildForRun/CMakeFiles/edit_cache.dir
+/usr/src/app/pipelines/MyBindings/buildForRun/CMakeFiles/denovo_sequencing.dir
+/usr/src/app/pipelines/MyBindings/buildForRun/extern/pybind11/CMakeFiles/rebuild_cache.dir
+/usr/src/app/pipelines/MyBindings/buildForRun/extern/pybind11/CMakeFiles/edit_cache.dir

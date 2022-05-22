@@ -1,0 +1,10 @@
+^C:\USERS\KASSIM SANTONE\DESKTOP\DJANGOCELERY\PIPELINES\MYBINDINGS\BUILDFORDEBUG\CMAKEFILES\34B1196C392CAFDD157ADF4BCB9CFF81\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings" "-BC:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug" --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file "C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/denovo_sequencing.sln"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

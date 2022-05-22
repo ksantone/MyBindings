@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -flto -shared  -o denovo_sequencing.cpython-39-x86_64-linux-gnu.so CMakeFiles/denovo_sequencing.dir/DeNovoSequencingAlgorithm.cpp.o  -Wl,-rpath,/usr/local/lib /usr/local/lib/libpython3.9.so 

@@ -1,0 +1,3 @@
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/out/build/x64-Debug/CMakeFiles/denovo_sequencing.dir
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/out/build/x64-Debug/CMakeFiles/edit_cache.dir

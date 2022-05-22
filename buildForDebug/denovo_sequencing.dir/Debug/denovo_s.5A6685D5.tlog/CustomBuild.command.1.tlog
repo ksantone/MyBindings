@@ -1,0 +1,10 @@
+^C:\USERS\KASSIM SANTONE\DESKTOP\DJANGOCELERY\PIPELINES\MYBINDINGS\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" "-SC:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings" "-BC:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug" --check-stamp-file "C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/CMakeFiles/generate.stamp"
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

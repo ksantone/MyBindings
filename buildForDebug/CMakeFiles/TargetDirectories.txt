@@ -1,0 +1,4 @@
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/CMakeFiles/denovo_sequencing.dir
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/CMakeFiles/ALL_BUILD.dir
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/CMakeFiles/ZERO_CHECK.dir
+C:/Users/Kassim Santone/Desktop/DjangoCelery/pipelines/MyBindings/buildForDebug/extern/pybind11/CMakeFiles/ALL_BUILD.dir
