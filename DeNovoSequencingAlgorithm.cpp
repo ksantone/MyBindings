@@ -21,7 +21,7 @@ namespace py = pybind11;
 
 std::mutex my_mutex;
 std::map <std::string, float> amino_acids = { {"A", 71.03711}, {"R", 156.10111}, {"N", 114.04293}, {"D", 115.02694}, {"C", 103.00919}, {"E", 129.04259}, {"Q", 128.05858 },
-        {"G", 57.02146}, {"H", 137.05891}, {"(I/L)", 113.08406}, {"K", 128.09496}, {"M", 131.04049}, {"F", 147.06841}, {"P", 97.05276},
+        {"G", 57.02146}, {"H", 137.05891}, {"L", 113.08406}, {"K", 128.09496}, {"M", 131.04049}, {"F", 147.06841}, {"P", 97.05276},
         {"S", 87.03203}, {"T", 101.04768}, {"W", 186.07931}, {"Y", 163.06333}, {"V", 99.06841} };
 std::mutex mtx;
 std::condition_variable current_cv;
@@ -61,6 +61,13 @@ struct less_than_mz {
 	}
 };
 
+struct less_than_amino_acid_mass {
+	inline bool operator()(std::pair<std::string, float>& amino_acid_1, std::pair<std::string, float>& amino_acid_2)
+	{
+		return (amino_acid_1.second < amino_acid_2.second);
+	}
+};
+
 float round_var(float var)
 {
 	float value = (int)(var * 10 + .5);
@@ -82,7 +89,7 @@ std::vector<Peak> glue_reversal(std::vector<Peak> tempSpectralPeaks, int charge,
 	return finalSpectralPeaks;
 }
 
-std::map<std::pair<int, int>, std::string> SpectrumGraph::computePrefixSuffixConnectors(std::vector<Peak> spectralPeaks, std::map<std::pair<int, int>, std::vector<std::string>> spectralEdges, float maxpoint) {
+std::map<std::pair<int, int>, std::string> SpectrumGraph::computePrefixSuffixConnectors(std::vector<Peak> spectralPeaks, /*std::map<std::pair<int, int>, std::vector<std::string>> spectralEdges,*/ float maxpoint) {
 	MyPrefixSuffix << "Maxpoint is: " << maxpoint << std::endl;
 	//std::cout << "Peak at 45th index: " << spectralPeaks.at(44).mz << std::endl;
 	std::map<std::pair<int, int>, std::string> prefix_suffix_connectors;
@@ -107,7 +114,7 @@ std::map<std::pair<int, int>, std::string> SpectrumGraph::computePrefixSuffixCon
 				aminoAcidsVector.push_back(aminoIt->first);
 			}
 		}*/
-		it = std::find_if (spectralPeaks.begin(), spectralPeaks.end(), [&](Peak peak){return std::abs(maxpoint-(peak.mass+spectralPeaks.at(count).mass))<4;});
+		it = std::find_if (spectralPeaks.begin(), spectralPeaks.end(), [&](Peak peak){return std::abs(maxpoint-(peak.mass+spectralPeaks.at(count).mass))<10;});
 		if (it!=spectralPeaks.end()) {
 			int index = it - spectralPeaks.begin();
 			indicesOfHigherPeaks.push_back(index);
@@ -177,6 +184,7 @@ SpectrumGraph::SpectrumGraph(std::string spectralData, double precursor_mz, doub
 	iss >> rt;
 	std::vector<Peak> baseSpectralPeaks;
 	baseSpectralPeaks.push_back(Peak(0, 1, 1, rt));
+	baseSpectralPeaks.push_back(Peak(18.0106, 1, 1, rt));
 	//std::cout << "About to enter while loop..." << std::endl;
 	while (iss >> peak_info) {
 		int start = 0;
@@ -244,7 +252,7 @@ SpectrumGraph::SpectrumGraph(std::string spectralData, double precursor_mz, doub
 			MyPeaks << "Mass: " << tempSpectralPeaks.at(i).mass << ", Charge: " << tempSpectralPeaks.at(i).charge << "." << std::endl;
 		}*/
 		for (int i = 0; i < unmodified_spectralPeaks.size(); i++) {
-			MyPeaks << "Mass (unmodified): " << unmodified_spectralPeaks.at(i).mass << ", Charge: " << unmodified_spectralPeaks.at(i).charge << "." << std::endl;
+			MyPeaks << "Mass (unmodified): " << unmodified_spectralPeaks.at(i).mass << ", Charge: " << unmodified_spectralPeaks.at(i).charge << ", Intensity: " << unmodified_spectralPeaks.at(i).intensity << "." << std::endl;
 		}
 		std::cout << "AAA" << std::endl;
 		/*std::vector<Peak>::iterator specIt;
@@ -267,17 +275,18 @@ SpectrumGraph::SpectrumGraph(std::string spectralData, double precursor_mz, doub
 		MyPeaks << "Mass: " << SpectrumGraph::spectralPeaks.at(i).mass << ", Charge: " << SpectrumGraph::spectralPeaks.at(i).charge << "." << std::endl;
 	}*/
 	for (int i = 0; i < SpectrumGraph::unmodifiedFinalSpectralPeaks.size(); i++) {
-		MyPeaks << "Mass (unmodified): " << SpectrumGraph::unmodifiedFinalSpectralPeaks.at(i).mass << ", Charge: " << SpectrumGraph::unmodifiedFinalSpectralPeaks.at(i).charge << "." << std::endl;
+		MyPeaks << "Mass (unmodified): " << SpectrumGraph::unmodifiedFinalSpectralPeaks.at(i).mass << ", Charge: " << SpectrumGraph::unmodifiedFinalSpectralPeaks.at(i).charge << ", Intensity: " << SpectrumGraph::unmodifiedFinalSpectralPeaks.at(i).intensity << "." << std::endl;
 	}
 	std::cout << "Before computeSpectralEdges..." << std::endl;
-	SpectrumGraph::spectralEdges = computeSpectralEdges(SpectrumGraph::unmodifiedFinalSpectralPeaks);
+	// Comment out this computation and remove all dependent code
+	//SpectrumGraph::spectralEdges = computeSpectralEdges(SpectrumGraph::unmodifiedFinalSpectralPeaks);
 	std::cout << "After computeSpectralEdges..." << std::endl;
 	std::cout << "Before computePrefixSuffixConnectors..." << std::endl;
-	spectralPrefixSuffixConnectors = computePrefixSuffixConnectors(SpectrumGraph::unmodifiedFinalSpectralPeaks/*SpectrumGraph::spectralPeaks*/, SpectrumGraph::spectralEdges, maxPeak);
+	spectralPrefixSuffixConnectors = computePrefixSuffixConnectors(SpectrumGraph::unmodifiedFinalSpectralPeaks/*SpectrumGraph::spectralPeaks, SpectrumGraph::spectralEdges*/, maxPeak);
 	std::cout << "After computePrefixSuffixConnectors..." << std::endl;
 	MyMZs.close();
 	std::cout << "Number of spectral peaks vectors is: " << SpectrumGraph::spectralPeaks.size() << "." << std::endl;
-	std::cout << "Number of spectral edges vectors is: " << SpectrumGraph::spectralEdges.size() << "." << std::endl;
+	//std::cout << "Number of spectral edges vectors is: " << SpectrumGraph::spectralEdges.size() << "." << std::endl;
 }
 
 Peak::Peak(float mass, int charge, float intensity, float rt)
@@ -505,9 +514,10 @@ std::vector<std::vector<std::pair<std::string, int> > > computeMassDecomposition
 	return final_sequences;
 }*/
 
-std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > FragmentWeightMatrix::find_b_sequence_from_fragment_position(std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > final_sequences, std::vector<double> fragmentWeightMatrix, std::map<std::pair<int, int>, std::vector<std::string>> edges, std::vector<std::pair<int, int> > edges_without_amino_acids, int spectrumPeaks, /*std::vector<std::pair<int, int> > current_edges, std::string prefix_suffix_connector, std::vector<std::vector<std::pair<std::string, int> > > mass_decompositions,*/std::vector<int> prefixEnds, std::vector<Peak> unmodifiedFinalSpectralPeaks) {
-	MyFinalSequence << "Number of edges is: " << edges.size() << "." << std::endl;
+std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > FragmentWeightMatrix::find_b_sequence_from_fragment_position(std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > final_sequences, std::vector<double> fragmentWeightMatrix, /*std::map<std::pair<int, int>, std::vector<std::string>> edges, std::vector<std::pair<int, int> > edges_without_amino_acids,*/ int spectrumPeaks, /*std::vector<std::pair<int, int> > current_edges, std::string prefix_suffix_connector, std::vector<std::vector<std::pair<std::string, int> > > mass_decompositions,*/std::vector<int> prefixEnds, std::vector<Peak> unmodifiedFinalSpectralPeaks) {
+	//MyFinalSequence << "Number of edges is: " << edges.size() << "." << std::endl;
 	MyFinalSequence << "First peak has mass: " << unmodifiedFinalSpectralPeaks.at(0).mass << "." << std::endl;
+	MyFinalSequence << "Second peak has mass: " << unmodifiedFinalSpectralPeaks.at(1).mass << "." << std::endl;
 	/*if (final_sequences.first.size()==0) {
 		std::cout << "Inside..." << std::endl;
 		//final_sequences.first.push_back(prefix_suffix_connector);
@@ -520,13 +530,13 @@ std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> 
 	//MyFinalSequence << "Maximum mass of b-ions is: " << unmodifiedFinalSpectralPeaks.at(current_edges.at(0).first).mass << "." << std::endl;
 	//left_edges.insert(current_edges.at(0).first);
 	//right_edges.insert(0);
-	std::cout << "After pushes..." << std::endl;
+	/*std::cout << "After pushes..." << std::endl;
 	std::vector<std::string> vector;
 	std::vector<std::vector<std::pair<int, int> > > position_vector;
 	std::set<int> used;
 	bool found;
 	int min_peak;
-	std::vector<std::string> current_amino;
+	std::vector<std::string> current_amino;*/
 	/*std::vector<std::pair<std::string, int> > fixed_mass_decomposition = mass_decompositions.at(0); // Will unfix later
 	std::vector<std::string> fixed_mass_decomp;
 	for (int i = 0; i < fixed_mass_decomposition.size(); i++) {
@@ -535,19 +545,37 @@ std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> 
 		}
 	}
 	MyFinalSequence << "Size of mass decomposition is: " << fixed_mass_decomp.size() << "." << std::endl;*/
+	std::vector<std::pair<std::string, float>> mass_sorted_amino_acids(amino_acids.begin(), amino_acids.end()); // Vector of amino acid (string, float) pairs from map converted to vector
+	std::sort(mass_sorted_amino_acids.begin(), mass_sorted_amino_acids.end(), less_than_amino_acid_mass());
+	for (int i = 0; i < mass_sorted_amino_acids.size(); i++) {
+		MyFinalSequence << "(" << mass_sorted_amino_acids.at(i).first << ", " << mass_sorted_amino_acids.at(i).second << ")." << std::endl;
+	}
 	MyFinalSequence << "Spectral peaks size is: " << unmodifiedFinalSpectralPeaks.size() << "." << std::endl;
-	std::vector<std::pair<std::string, int> > fixed_mass_decomposition_pairs;
-	std::vector<std::pair<float, std::string> > b_ion_prefix_tree;
-	std::queue<std::string> unsearched_sequences;
-	std::map<std::string, int> sequence_to_error;
-	std::map<std::string, int> sequence_to_peak;
-	b_ion_prefix_tree.push_back(std::pair<float, std::string>(0, ""));
-	unsearched_sequences.push("");
-	sequence_to_error[""] = 0;
-	sequence_to_peak[""] = 0;
-	std::cout << "Just before single or at least pair while loop..." << std::endl;
+	//std::vector<std::pair<std::string, int> > fixed_mass_decomposition_pairs;
+	//std::vector<std::pair<std::vector<float>, std::string> > b_ion_prefix_tree;
+	std::queue<std::pair<float, std::string>> unsearched_sequences;
+	std::map<std::pair<float, std::string>, int> sequence_to_peak;
+	//std::queue<std::pair<std::vector<float>, std::pair<std::string, std::string>>> unsearched_sequences;
+	//std::map<std::pair<std::vector<float>, std::pair<std::string, std::string>>, float> sequence_to_error;
+	//std::map<std::pair<std::vector<float>, std::pair<std::string, std::string>>, int> sequence_to_peak;
+	std::vector<float> zero_vector;
+	zero_vector.push_back(0);
+	/*std::vector<float> y_zero_vector;
+	y_zero_vector.push_back(18.0106);
+	b_ion_prefix_tree.push_back(std::pair<std::vector<float>, std::string>(zero_vector, ""));*/
+	unsearched_sequences.push(std::pair<float, std::string>(0, ""));
+	//unsearched_sequences.push(std::pair<std::vector<float>, std::pair<std::string, std::string>>(zero_vector, std::pair<std::string, std::string>("", "b-ion")));
+	//b_ion_prefix_tree.push_back(std::pair<std::vector<float>, std::string>(y_zero_vector, ""));
+	//unsearched_sequences.push(std::pair<std::vector<float>, std::pair<std::string, std::string>>(y_zero_vector, std::pair<std::string, std::string>("", "y-ion")));
+	//sequence_to_error[std::pair<std::vector<float>, std::pair<std::string, std::string>>(zero_vector, std::pair<std::string, std::string>("", "b-ion"))] = 0;
+	//sequence_to_peak[std::pair<std::vector<float>, std::pair<std::string, std::string>>(zero_vector, std::pair<std::string, std::string>("", "b-ion"))] = 0;
+	sequence_to_peak[std::pair<float, std::string>(0, "")] = 0;
+	//sequence_to_error[std::pair<std::vector<float>, std::pair<std::string, std::string>>(y_zero_vector, std::pair<std::string, std::string>("", "y-ion"))] = 0;
+	//sequence_to_peak[std::pair<std::vector<float>, std::pair<std::string, std::string>>(y_zero_vector, std::pair<std::string, std::string>("", "y-ion"))] = 1;
+	//std::cout << "Just before single or at least pair while loop..." << std::endl;
 	MyFinalSequence << "Searching for prefixes now..." << std::endl;
-	std::string previous_seq;
+	//std::pair<std::vector<float>, std::pair<std::string, std::string>> previous_seq;
+	std::pair<float, std::string> previous_seq;
 	int current_peak = 0, next_peak = 1;
 	std::cout << "Prefixes are: " << std::endl;
 	for (int i = 0; i < prefixEnds.size(); i++) {
@@ -557,71 +585,151 @@ std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> 
 		while (!unsearched_sequences.empty()) {
 			previous_seq = unsearched_sequences.front();
 			unsearched_sequences.pop();
-			if (sequence_to_error[previous_seq]<=1) {
+			/*if (sequence_to_error[previous_seq]*3<previous_seq.second.first.length()+2) {
+				if(previous_seq.second.first.length()==3) {
+					if (previous_seq.second.first!="LLP" && previous_seq.second.first!="RPL") {
+						continue;
+					}
+				}
+				if (previous_seq.second.first.length()==4) {
+					if (previous_seq.second.first=="LLPD" || previous_seq.second.first=="RPLT") {
+						MyFinalSequence << "Looking for LLPDG or RPLTP." << std::endl;
+					} else {
+						continue;
+					}
+				}
 				break;
-			}
+			}*/
 		}
-		MyFinalSequence << "Previous sequence is: " << previous_seq << "." << std::endl;
-		float sequence_mass = 0;
-		for (int k = 0; k < previous_seq.length(); k++) {
-			sequence_mass += amino_acids[std::string(1, previous_seq.at(k))];
+		MyFinalSequence << "Previous sequence is: " << previous_seq.second << " with mass: " << previous_seq.first << "." << std::endl;
+		//MyFinalSequence << "Previous sequence is: (" << previous_seq.second.first << ", " << previous_seq.second.second << ") with mass " << previous_seq.first.at(previous_seq.first.size()-1) << "." << std::endl;
+		//float sequence_mass = /*18.010565*/0;
+		/*for (int k = 0; k < previous_seq.second.second.length(); k++) {
+			sequence_mass += amino_acids[std::string(1, previous_seq.second.second.at(k))];
 		}
-		float temp_sequence_mass = sequence_mass;
+		float temp_sequence_mass = sequence_mass;*/
 		//for (int j =; j < fixed_mass_decomp.size(); j++) {
 		current_peak = sequence_to_peak[previous_seq];
+		MyFinalSequence << "Current peak (before searching for next peak) is: " << current_peak << "." << std::endl;
 		next_peak = current_peak + 1;
-		if (next_peak>=unmodifiedFinalSpectralPeaks.size()) {
-			while (unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass<190) {
+		int startPeak = current_peak, movingPeak; // Find leftmost peak within range of smallest amino acid and set startPeak do it (keep it for next amino acid then move up to where it start)
+		// Find all peaks within a range of 10 to the left and right of the amino acid to compute a triangular area, get the maximum and proceed
+		// Still must account for prefixEnds (I think?)
+		if (next_peak<=unmodifiedFinalSpectralPeaks.size()-1) {
+			std::string largest_amino_so_far = "";
+			float largest_sum_so_far = -1;
+			float best_peak = 0;
+			int best_peak_index = 0;
+			for (int i = 0; i < mass_sorted_amino_acids.size(); i++) {
+				float mass_to_search_for = unmodifiedFinalSpectralPeaks.at(current_peak).mass + mass_sorted_amino_acids.at(i).second - 10;
+				float compute_up_to_mass = mass_to_search_for + 20;
+				MyFinalSequence << "Computing from mass: " << mass_to_search_for << " up to: " << compute_up_to_mass << "." << std::endl;
+				float mass_under_triangle = 0;
+				while (unmodifiedFinalSpectralPeaks.at(startPeak).mass < mass_to_search_for) {
+					MyFinalSequence << "Mass at peak: " << startPeak << " is: " << unmodifiedFinalSpectralPeaks	.at(startPeak).mass << "." << std::endl;
+					startPeak += 1;
+					if (startPeak==unmodifiedFinalSpectralPeaks.size()-1) {
+						break;
+					}
+				}
+				if (startPeak==unmodifiedFinalSpectralPeaks.size()-1) {
+					break;
+				}
+				movingPeak = startPeak;
+				MyFinalSequence << "Highest probability point for peak is: " << mass_to_search_for+10 << "." << std::endl;
+				while (unmodifiedFinalSpectralPeaks.at(movingPeak).mass < compute_up_to_mass && movingPeak!=unmodifiedFinalSpectralPeaks.size()-1) {
+					mass_under_triangle += (std::abs((mass_to_search_for+10)-unmodifiedFinalSpectralPeaks.at(movingPeak).mass)/15)*unmodifiedFinalSpectralPeaks.at(movingPeak).intensity;
+					MyFinalSequence << "Mass at peak: " << startPeak << " is: " << unmodifiedFinalSpectralPeaks	.at(startPeak).mass << " and current mass under triangle is: " << mass_under_triangle << "." << std::endl;
+					movingPeak += 1;
+					MyFinalSequence << "Last peak was: " << unmodifiedFinalSpectralPeaks.at(movingPeak-1).mass << " and current peak is: " << unmodifiedFinalSpectralPeaks.at(movingPeak).mass << "." << std::endl;
+					if (unmodifiedFinalSpectralPeaks.at(movingPeak).mass>mass_to_search_for+10 && unmodifiedFinalSpectralPeaks.at(movingPeak-1).mass<mass_to_search_for+10) {
+						// For now go with lower one, maybe later decide how to choose which is better
+						best_peak = unmodifiedFinalSpectralPeaks.at(movingPeak-1).mass;
+						best_peak_index = movingPeak - 1;
+					}
+				}
+				MyFinalSequence << "Mass under triangle: " << mass_under_triangle << " and largest sum so far: " << largest_sum_so_far << "." << std::endl;
+				if(mass_under_triangle>largest_sum_so_far) {
+					largest_sum_so_far = mass_under_triangle;
+					largest_amino_so_far = mass_sorted_amino_acids.at(i).first;
+				}
+				if (best_peak!=0 && movingPeak==unmodifiedFinalSpectralPeaks.size()-1) {
+					break;
+				}
+			}
+			if (startPeak==unmodifiedFinalSpectralPeaks.size()-1) {
+				break;
+			}
+			MyFinalSequence << "Currently on partial sequence: " << previous_seq.second+largest_amino_so_far << " with mass " << best_peak << "." << std::endl;
+			unsearched_sequences.push(std::pair<float, std::string>(best_peak, previous_seq.second+largest_amino_so_far));
+			sequence_to_peak[std::pair<float, std::string>(best_peak, previous_seq.second+largest_amino_so_far)] = best_peak_index;
+			MyFinalSequence << "Best peak index is: " << best_peak_index << "." << std::endl;
+			// Compute startPeak then set movingPeak=startPeak and scan along for current amino acid
+			//while (unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass<190) {
 				//std::cout << "Peaks are (inside): " << unmodifiedFinalSpectralPeaks.at(next_peak).mass << " and " << unmodifiedFinalSpectralPeaks.at(current_peak).mass << "." << std::endl;
-				MyFinalSequence << "Indices are: " << current_peak << " and " << next_peak << "." << std::endl;
-				bool sufficient_distance = false;
-				if(edges.find(std::pair<int, int>(current_peak, next_peak))!=edges.end() && std::find(prefixEnds.begin(), prefixEnds.end(), next_peak)!=prefixEnds.end()) {
+				/*if(edges.find(std::pair<int, int>(current_peak, next_peak))!=edges.end() && std::find(prefixEnds.begin(), prefixEnds.end(), next_peak)!=prefixEnds.end()) {
 					//found_one = true;
-					MyFinalSequence << "Peaks are: " << unmodifiedFinalSpectralPeaks.at(next_peak).mass << " and " << unmodifiedFinalSpectralPeaks.at(current_peak).mass << "." << std::endl;
+					MyFinalSequence << "Indices are: (" << current_peak << ", " << next_peak << ") with peaks: (" << unmodifiedFinalSpectralPeaks.at(next_peak).mass << ", " << unmodifiedFinalSpectralPeaks.at(current_peak).mass << ") ";
 					current_amino = edges[std::pair<int, int>(current_peak, next_peak)];
+					if (previous_seq.second.first=="RPL") {
+						MyFinalSequence << "On sequence: RPL. ";
+					}
 					for (int c = 0; c < current_amino.size(); c++) {
+						//bool sufficient_distance = false;
 						sequence_mass = temp_sequence_mass + amino_acids[current_amino.at(c)];
+						std::vector<float> updated_peak_list = previous_seq.first;
+						updated_peak_list.push_back(unmodifiedFinalSpectralPeaks.at(next_peak).mass);
+						std::pair<std::vector<float>, std::pair<std::string, std::string>> sequence_pair = std::pair<std::vector<float>, std::pair<std::string, std::string>>(updated_peak_list, std::pair<std::string, std::string>(previous_seq.second.first+current_amino.at(c), previous_seq.second.second));
 						std::cout << "Inside with AA: " << current_amino.at(c) << " and mass " << sequence_mass << std::endl;
 						std::cout << "Mass difference is: " << std::abs(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass) << std::endl;
 						//bool found_first = false, sufficient_distance = false;
 						//MyFinalSequence << "Peak index is: " << peak_index << std::endl;
-						/*if (std::abs(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass)<3) {
-							std::cout << "ABC" << std::endl;
-							sufficient_distance = true;
-						}*/
-						if (!std::count(b_ion_prefix_tree.begin(), b_ion_prefix_tree.end(), std::pair<float, std::string>(unmodifiedFinalSpectralPeaks.at(next_peak).mass, previous_seq+current_amino.at(c)))) {
-							std::cout << "DEF" << std::endl;
-							sequence_to_peak[previous_seq+current_amino] = next_peak;
-							unsearched_sequences.push(previous_seq+current_amino);
-							b_ion_prefix_tree.push_back(std::pair<float, std::string>(unmodifiedFinalSpectralPeaks.at(current_peak).mass, previous_seq+current_amino.at(c)));
-							MyFinalSequence << "Mass: " << unmodifiedFinalSpectralPeaks.at(next_peak).mass << " partial sequence: " << previous_seq+current_amino.at(c) << "." << std::endl;
+						//MyFinalSequence << "on AA: " << current_amino.at(c) << " closeness to peak difference is: " << std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass)) << " ";
+						if (previous_seq.second.first=="RPL" && current_amino.at(c)=="T") {
+							MyFinalSequence << "At AA of T and peak is: " << unmodifiedFinalSpectralPeaks.at(next_peak).mass << " mass with closeness of mass difference to AA mass of: " << std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass)) << " ";
 						}
-						MyFinalSequence << "Sufficient distance is: " << sufficient_distance << " on sequence " << previous_seq+current_amino.at(c) << "." << std::endl;
-						if (!sufficient_distance) {
-							std::cout << "GHI" << std::endl;
-							sequence_to_error[previous_seq+current_amino.at(c)] = sequence_to_error[previous_seq]+1;
+						if (std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass))<14) {
+							//if (!std::count(b_ion_prefix_tree.begin(), b_ion_prefix_tree.end(), std::pair<float, std::string>(unmodifiedFinalSpectralPeaks.at(next_peak).mass, previous_seq.second+current_amino.at(c)))) {
+								std::cout << "DEF" << std::endl;
+								sequence_to_peak[sequence_pair] = next_peak;
+								unsearched_sequences.push(sequence_pair);
+								//b_ion_prefix_tree.push_back(sequence_pair);
+								MyFinalSequence << " and partial sequence: " << previous_seq.second.first+current_amino.at(c) << ". ";
+								if (std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass))<2) {
+									sequence_to_error[sequence_pair] = sequence_to_error[previous_seq];
+								} else if(std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass))<6) {
+									sequence_to_error[sequence_pair] = sequence_to_error[previous_seq]+1;
+								} else if(std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass))<10) {
+									sequence_to_error[sequence_pair] = sequence_to_error[previous_seq]+2;
+								} else if(std::abs(amino_acids[current_amino.at(c)]-(unmodifiedFinalSpectralPeaks.at(next_peak).mass-unmodifiedFinalSpectralPeaks.at(current_peak).mass))<14) {
+									sequence_to_error[sequence_pair] = sequence_to_error[previous_seq]+3;
+								}
+							//}
+
+						MyFinalSequence << "The number of errors is: " << sequence_to_error[sequence_pair] << "." << std::endl;
 						}
 					}
 				}
 				next_peak += 1;
 				if (next_peak==unmodifiedFinalSpectralPeaks.size()) {
 					break;
-				}
-			}
+				}*/
 		}
 		if (unsearched_sequences.empty()) {
-			break;
+			MyFinalSequence << "Best sequence was: " << previous_seq.second << " with mass: " << previous_seq.first << "." << std::endl;
+			//break;
 		}
 	}
-	std::cout << "Maximum mass is: " << unmodifiedFinalSpectralPeaks.at(unmodifiedFinalSpectralPeaks.size()-1).mass << std::endl;
-	for (int i = 0; i < b_ion_prefix_tree.size(); i++) {
+	//std::cout << "Maximum mass is: " << unmodifiedFinalSpectralPeaks.at(unmodifiedFinalSpectralPeaks.size()-1).mass << std::endl;
+	//MyFinalSequence << std::endl << std::endl << "Final sequences are: " << std::endl; 
+	//for (int i = 0; i < b_ion_prefix_tree.size(); i++) {
 		// Only include prefixes that go up to prefix-suffix connector and put into separate file
 		//if (b_ion_prefix_tree.at(i).first==583.283) {
-		if (b_ion_prefix_tree.at(i).first > unmodifiedFinalSpectralPeaks.at(unmodifiedFinalSpectralPeaks.size()-1).mass-10) {
-			MyFinalSequence << "Sequence at mass: " << b_ion_prefix_tree.at(i).first << " is: " << b_ion_prefix_tree.at(i).second << "." << std::endl;
-		}
+		//if (b_ion_prefix_tree.at(i).first > unmodifiedFinalSpectralPeaks.at(unmodifiedFinalSpectralPeaks.size()-1).mass-10) {
+			//MyFinalSequence << "Sequence at mass: " << b_ion_prefix_tree.at(i).first.at(b_ion_prefix_tree.at(i).first.size()-1) << " is: " << b_ion_prefix_tree.at(i).second << " with number of errors: " << sequence_to_error[b_ion_prefix_tree.at(i)] << "." << std::endl;
 		//}
-	}
+		//}
+	//}
 	//MyFinalSequence << "Final prefix sequence is: " << final_sequence_prefix << "." << std::endl;
 	//MyFinalSequence << "Final suffix sequence is: " << final_sequence_suffix << "." << std::endl;
 	//MyFinalSequence.close();
@@ -646,11 +754,11 @@ FragmentWeightMatrix::FragmentWeightMatrix(const FragmentWeightMatrix &fragmentW
 	std::cout << "Done copy..." << std::endl;
 }
 
-FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spectrumPeaks, std::map<std::pair<int, int>, std::vector<std::string>> edges) {
+FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spectrumPeaks/*, std::map<std::pair<int, int>, std::vector<std::string>> edges*/) {
 	std::cout << "In FragmentWeightMatrix constructor..." << std::endl;
 	FragmentWeightMatrix::spectrumPeaks = spectrumPeaks;
-	FragmentWeightMatrix::edges = edges;
-	fp = fopen("/usr/src/app/progress.txt", "w+");
+	//FragmentWeightMatrix::edges = edges;
+	/*fp = fopen("/usr/src/app/progress.txt", "w+");
 	std::cout << "Number of peaks is: " << spectrumPeaks << std::endl;
 	for (int i = 0; i < spectrumPeaks * spectrumPeaks; i++) {
 		fragmentWeightMatrix.push_back(0);
@@ -672,10 +780,10 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 	double max_num_of_peaks = 0;
 	std::pair<int, int> optimal_fragment_position;
 	std::vector<std::pair<int, int> > edges_without_amino_acids;
-	/*for (std::map<std::pair<int, int>, std::string>::iterator it = edges.begin(); it != edges.end(); it++) {
+	for (std::map<std::pair<int, int>, std::string>::iterator it = edges.begin(); it != edges.end(); it++) {
 		std::cout << "Current edge is: (" << it->first.first << ", " << it->first.second << ")." << std::endl;
-	}*/
-	std::transform(edges.begin(), edges.end(), std::back_inserter(edges_without_amino_acids), [&](std::pair<std::pair<int, int>, std::string> edge) { return edge.first; });
+	}
+	std::transform(edges.begin(), edges.end(), std::back_inserter(edges_without_amino_acids), [&](std::pair<std::pair<int, int>, std::vector<std::string>> edge) { return edge.first; });
 	std::vector<std::string> prefix_suffix_connectors;
 	std::vector<std::pair<int, int> > optimal_fragment_positions;
 	std::map<std::pair<int, int>, double> fragment_to_num_of_peaks;
@@ -697,7 +805,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 	std::vector<std::pair<int, int> > standing_edges;
 	std::string prefix_suffix;
 	std::vector<std::pair<float, std::vector<std::vector<std::pair<std::string, int> > > > > b_ion_to_mass_decompositions;
-	bool first = true;
+	bool first = true;*/
 	/*for (std::map<std::pair<int, int>, std::string>::iterator it = edges.begin(); it != edges.end(); it++) {
 		std::cout << "Current edge is: (" << it->first.first << ", " << it->first.second << ")." << std::endl;
 	}*/
@@ -796,7 +904,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 		}*/
 		//b_ion_to_mass_decompositions[spectrumGraph.spectralPeaks.at(it->first.first).mass] = mass_decompositions;
 		//MyFinalSequence << "At mass: " << spectrumGraph.unmodifiedFinalSpectralPeaks.at(it->first.first).mass << std::endl;
-		std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > b_fragment = FragmentWeightMatrix::find_b_sequence_from_fragment_position(final_sequences, fragmentWeightMatrix, edges, edges_without_amino_acids, spectrumPeaks, /*current_edges, prefix_suffix, temp_mass_decompositions,*/ prefixEnds, spectrumGraph.unmodifiedFinalSpectralPeaks);
+		std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > b_fragment = FragmentWeightMatrix::find_b_sequence_from_fragment_position(final_sequences, fragmentWeightMatrix, /*edges, edges_without_amino_acids,*/ spectrumPeaks, /*current_edges, prefix_suffix, temp_mass_decompositions,*/ prefixEnds, spectrumGraph.unmodifiedFinalSpectralPeaks);
 		// Make 2 separate find_b_sequence_from_fragment_position and find_y_sequence_from_fragment_position functions for finding peptide sequences
 		//std::pair<std::vector<std::string>, std::vector<std::vector<std::pair<int, int> > > > new_fragment = FragmentWeightMatrix::find_sequence_from_fragment_position(final_sequences, fragmentWeightMatrix, edges, edges_without_amino_acids, spectrumPeaks, current_edges, it->second);
 		//best_fragments.push_back(new_fragment);
@@ -809,7 +917,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 	//MyFinalSequence << "About to start computing final sequence..." << std::endl;
 	//std::cout << "Optimal fragments size: " << optimal_fragment_positions.size() << std::endl;
 	// TODO don't take only first element in best fragments per element
-	for (int j = 0; j < best_fragments.size(); j++) {
+	/*for (int j = 0; j < best_fragments.size(); j++) {
 		for (int k = 0; k < best_fragments.at(j).first.size(); k++) {
 			MyFile << best_fragments.at(j).first.at(k) << std::endl;
 			for (int l = 0; l < best_fragments.at(j).second.at(k).size(); l++) {
@@ -818,7 +926,7 @@ FragmentWeightMatrix::FragmentWeightMatrix(SpectrumGraph spectrumGraph, int spec
 			MyFile << std::endl;
 		}
 	}
-	MyFile << "End of current charge..." << std::endl;
+	MyFile << "End of current charge..." << std::endl;*/
 }
 
 // Initialization methods
@@ -860,7 +968,7 @@ void DeNovoSequencingAlgorithm::run_denovo() {
     std::cout << "Spectrum graphs size is: " << spectrumGraphs.size() << "." << std::endl;
     for (it = spectrumGraphs.begin(); it != spectrumGraphs.end(); it++) {
     	std::cout << "About to call fragment weight matrix constructor..." << std::endl;
-        fragmentWeightMatrices.push_back(FragmentWeightMatrix(*it, it->spectralPeaks.size(), it->spectralEdges));
+        fragmentWeightMatrices.push_back(FragmentWeightMatrix(*it, it->spectralPeaks.size()/*, it->spectralEdges*/));
     }
     MyFile.close();
 }
